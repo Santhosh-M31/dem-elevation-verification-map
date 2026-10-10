@@ -37,14 +37,22 @@
     const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 19, attribution: 'Tiles &copy; Esri' });
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
     let tileErrors = 0;
-    esri.on('tileerror', () => {
-      tileErrors += 1;
-      if (tileErrors >= 3 && map.hasLayer(esri)) {
+    let esriTileLoaded = false;
+    const useOsm = () => {
+      if (map.hasLayer(esri)) {
         map.removeLayer(esri);
         osm.addTo(map);
       }
+    };
+    esri.on('tileload', () => { esriTileLoaded = true; });
+    esri.on('tileerror', () => {
+      tileErrors += 1;
+      if (tileErrors >= 3) useOsm();
     });
     esri.addTo(map);
+    // Some network failures do not emit a tile error, so use a timed fallback too.
+    setTimeout(() => { if (!esriTileLoaded) useOsm(); }, 5000);
+    L.control.layers({ 'Esri Satellite': esri, 'OpenStreetMap': osm }, null, { position: 'topleft' }).addTo(map);
     const boundary = L.geoJSON(boundaryData, { style: { color: '#6b7280', weight: 3, opacity: .9 } }).addTo(map);
     const rows = document.getElementById('point-rows'); let selectedRow;
     const colorFor = elevation => elevationStyleRanges.find(range => elevation >= range.lower && elevation <= range.upper)?.color || '#777';
