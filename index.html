@@ -35,7 +35,8 @@
     // Both sources provide native tiles through level 19; do not allow blank over-zoom levels.
     const map = L.map('map', { preferCanvas: true, maxZoom: 19 });
     const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 19, attribution: 'Tiles &copy; Esri' });
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+    // CARTO's street tiles are derived from OpenStreetMap data and avoid blocked public OSM tile hosts.
+    const osm = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, maxNativeZoom: 19, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' });
     let tileErrors = 0;
     let esriTileLoaded = false;
     const useOsm = () => {
@@ -52,7 +53,7 @@
     esri.addTo(map);
     // Some network failures do not emit a tile error, so use a timed fallback too.
     setTimeout(() => { if (!esriTileLoaded) useOsm(); }, 5000);
-    L.control.layers({ 'Esri Satellite': esri, 'OpenStreetMap': osm }, null, { position: 'topleft' }).addTo(map);
+    L.control.layers({ 'Esri Satellite': esri, 'Street map (OpenStreetMap)': osm }, null, { position: 'topleft' }).addTo(map);
     const boundary = L.geoJSON(boundaryData, { style: { color: '#6b7280', weight: 3, opacity: .9 } }).addTo(map);
     const rows = document.getElementById('point-rows'); let selectedRow;
     const colorFor = elevation => elevationStyleRanges.find(range => elevation >= range.lower && elevation <= range.upper)?.color || '#777';
