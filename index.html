@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DEM Elevation Verification</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    * { box-sizing: border-box; } body { margin: 0; height: 100vh; font: 14px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1c242b; }
+    #app { height: 100%; } #map { height: 100%; min-height: 400px; }
+    aside { position: fixed; z-index: 1000; top: 12px; right: 12px; bottom: 12px; display: flex; flex-direction: column; width: 390px; min-width: 0; background: rgba(255,255,255,.96); border: 1px solid #cfd6da; border-radius: 7px; box-shadow: 0 2px 12px rgba(0,0,0,.28); overflow: hidden; }
+    header { padding: 16px; border-bottom: 1px solid #dfe4e7; } h1 { margin: 0; font-size: 18px; } header p { margin: 4px 0 0; color: #57636a; font-size: 12px; }
+    .table-wrap { overflow: auto; flex: 1; } table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+    th { position: sticky; top: 0; z-index: 1; background: #f1f4f5; color: #3d4a52; text-align: left; white-space: nowrap; padding: 9px 8px; border-bottom: 1px solid #cad2d6; }
+    td { padding: 7px 8px; border-bottom: 1px solid #e6eaec; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    tbody tr { cursor: pointer; } tbody tr:hover, tbody tr.selected { background: #e2f0f7; }
+    .legend { position: absolute; bottom: 24px; left: 12px; z-index: 1000; background: rgba(255,255,255,.93); border-radius: 5px; padding: 7px 9px; box-shadow: 0 1px 5px #777; font-size: 11px; }
+    .legend i { display: inline-block; width: 11px; height: 11px; margin-right: 5px; vertical-align: -1px; border-radius: 50%; }
+    dl { display: grid; grid-template-columns: auto auto; gap: 4px 10px; margin: 0; } dt { color: #59646a; } dd { margin: 0; font-weight: 650; text-align: right; }
+    @media (max-width: 800px) { aside { top: auto; right: 8px; bottom: 8px; left: 8px; width: auto; height: 42vh; } }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <main id="map" aria-label="Satellite map with elevation verification points"></main>
+    <aside>
+      <header><h1>DEM Elevation Verification</h1><p>Click a row or point to inspect its elevation.</p></header>
+      <div class="table-wrap"><table><thead><tr><th>Point ID</th><th>Elevation (m)</th><th>X</th><th>Y</th></tr></thead><tbody id="point-rows"></tbody></table></div>
+    </aside>
+  </div>
+  <div class="legend"><i style="background:#ffea46"></i> Lower elevation &nbsp; <i style="background:#00204d"></i> Higher elevation</div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="altitude-extract-v4.js"></script><script src="boundary.js"></script><script src="point-style.js"></script>
+  <script>
+    const map = L.map('map', { preferCanvas: true });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(map);
+    const boundary = L.geoJSON(boundaryData, { style: { color: '#6b7280', weight: 3, opacity: .9 } }).addTo(map);
+    const rows = document.getElementById('point-rows'); let selectedRow;
+    const colorFor = elevation => elevationStyleRanges.find(range => elevation >= range.lower && elevation <= range.upper)?.color || '#777';
+    const select = (layer, row) => { if (selectedRow) selectedRow.classList.remove('selected'); selectedRow = row; row.classList.add('selected'); row.scrollIntoView({ block: 'nearest' }); map.panTo(layer.getLatLng()); layer.openPopup(); };
+    const points = L.geoJSON(elevationPoints, {
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, { radius: 4, color: '#232323', weight: .5, fillColor: colorFor(Number(feature.properties.Elevation)), fillOpacity: 1 }),
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        layer.bindPopup(`<dl><dt>Point ID</dt><dd>${p['Point ID']}</dd><dt>Elevation</dt><dd>${Number(p.Elevation).toFixed(2)} m</dd><dt>X</dt><dd>${Number(p.X).toFixed(2)}</dd><dt>Y</dt><dd>${Number(p.Y).toFixed(2)}</dd></dl>`);
+        const row = document.createElement('tr'); row.innerHTML = `<td>${p['Point ID']}</td><td>${Number(p.Elevation).toFixed(2)}</td><td>${Number(p.X).toFixed(2)}</td><td>${Number(p.Y).toFixed(2)}</td>`;
+        row.addEventListener('click', () => select(layer, row)); layer.on('click', () => select(layer, row)); rows.appendChild(row);
+      }
+    }).addTo(map);
+    // Use the boundary and a small surrounding area for the initial view.
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+      map.fitBounds(boundary.getBounds(), { padding: [80, 80], maxZoom: 16 });
+    });
+  </script>
+</body>
+</html>
