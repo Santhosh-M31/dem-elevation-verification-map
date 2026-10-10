@@ -32,9 +32,19 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="altitude-extract-v4.js"></script><script src="boundary.js"></script><script src="point-style.js"></script>
   <script>
-    // Esri World Imagery has native tiles through zoom level 19; prevent over-zooming.
+    // Both sources provide native tiles through level 19; do not allow blank over-zoom levels.
     const map = L.map('map', { preferCanvas: true, maxZoom: 19 });
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 19, attribution: 'Tiles &copy; Esri' }).addTo(map);
+    const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 19, attribution: 'Tiles &copy; Esri' });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+    let tileErrors = 0;
+    esri.on('tileerror', () => {
+      tileErrors += 1;
+      if (tileErrors >= 3 && map.hasLayer(esri)) {
+        map.removeLayer(esri);
+        osm.addTo(map);
+      }
+    });
+    esri.addTo(map);
     const boundary = L.geoJSON(boundaryData, { style: { color: '#6b7280', weight: 3, opacity: .9 } }).addTo(map);
     const rows = document.getElementById('point-rows'); let selectedRow;
     const colorFor = elevation => elevationStyleRanges.find(range => elevation >= range.lower && elevation <= range.upper)?.color || '#777';
