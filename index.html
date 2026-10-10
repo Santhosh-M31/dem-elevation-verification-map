@@ -59,7 +59,7 @@
     const colorFor = elevation => elevationStyleRanges.find(range => elevation >= range.lower && elevation <= range.upper)?.color || '#777';
     const select = (layer, row) => { if (selectedRow) selectedRow.classList.remove('selected'); selectedRow = row; row.classList.add('selected'); row.scrollIntoView({ block: 'nearest' }); map.panTo(layer.getLatLng()); layer.openPopup(); };
     const points = L.geoJSON(elevationPoints, {
-      pointToLayer: (feature, latlng) => L.circleMarker(latlng, { radius: 1, color: '#232323', weight: .5, fillColor: colorFor(Number(feature.properties.Elevation)), fillOpacity: 1 }),
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, { radius: 1.5, color: '#232323', weight: .5, fillColor: colorFor(Number(feature.properties.Elevation)), fillOpacity: 1 }),
       onEachFeature: (feature, layer) => {
         const p = feature.properties;
         layer.bindPopup(`<dl><dt>Point ID</dt><dd>${p['Point ID']}</dd><dt>Elevation</dt><dd>${Number(p.Elevation).toFixed(2)} m</dd><dt>X</dt><dd>${Number(p.X).toFixed(2)}</dd><dt>Y</dt><dd>${Number(p.Y).toFixed(2)}</dd></dl>`);
