@@ -10,6 +10,8 @@
     #app { height: 100%; } #map { height: 100%; min-height: 400px; }
     aside { position: fixed; z-index: 1000; top: 12px; right: 12px; bottom: 12px; display: flex; flex-direction: column; width: 390px; min-width: 0; background: rgba(255,255,255,.96); border: 1px solid #cfd6da; border-radius: 7px; box-shadow: 0 2px 12px rgba(0,0,0,.28); overflow: hidden; }
     header { padding: 16px; border-bottom: 1px solid #dfe4e7; } h1 { margin: 0; font-size: 18px; } header p { margin: 4px 0 0; color: #57636a; font-size: 12px; }
+    .download { display: inline-block; margin-top: 10px; padding: 6px 9px; border-radius: 4px; background: #176c94; color: #fff; text-decoration: none; font-size: 12px; font-weight: 600; }
+    .download:hover { background: #115675; }
     .table-wrap { overflow: auto; flex: 1; } table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
     th { position: sticky; top: 0; z-index: 1; background: #f1f4f5; color: #3d4a52; text-align: left; white-space: nowrap; padding: 9px 8px; border-bottom: 1px solid #cad2d6; }
     td { padding: 7px 8px; border-bottom: 1px solid #e6eaec; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -24,7 +26,7 @@
   <div id="app">
     <main id="map" aria-label="Satellite map with elevation verification points"></main>
     <aside>
-      <header><h1>DEM Elevation Verification</h1><p>Click a row or point to inspect its elevation.</p></header>
+      <header><h1>DEM Elevation Verification</h1><p>Click a row or point to inspect its elevation.</p><a class="download" href="altitude-correction.csv" download>Download corrected CSV</a></header>
       <div class="table-wrap"><table><thead><tr><th>Point ID</th><th>Elevation (m)</th><th>X</th><th>Y</th></tr></thead><tbody id="point-rows"></tbody></table></div>
     </aside>
   </div>
