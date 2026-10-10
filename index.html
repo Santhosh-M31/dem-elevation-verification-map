@@ -37,21 +37,8 @@
     const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 25, maxNativeZoom: 19, attribution: 'Tiles &copy; Esri' });
     // Community-hosted OpenStreetMap tiles; no API key is required.
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { maxZoom: 25, maxNativeZoom: 19, subdomains: 'abc', attribution: '&copy; OpenStreetMap contributors &copy; OpenStreetMap France' });
-    let esriFinishedLoading = false;
-    const useOsm = () => {
-      if (map.hasLayer(esri)) {
-        map.removeLayer(esri);
-        osm.addTo(map);
-      }
-    };
-    esri.on('tileerror', () => {
-      // One failed tile is enough to avoid leaving a partially blank satellite map.
-      useOsm();
-    });
-    esri.on('load', () => { esriFinishedLoading = true; });
-    esri.addTo(map);
-    // Some network failures do not emit a tile error, so use a timed fallback too.
-    setTimeout(() => { if (!esriFinishedLoading) useOsm(); }, 5000);
+    // Start with the lightweight street map; satellite imagery remains available in the layer selector.
+    osm.addTo(map);
     L.control.layers({ 'Esri Satellite': esri, 'OpenStreetMap streets': osm }, null, { position: 'topleft' }).addTo(map);
     const boundary = L.geoJSON(boundaryData, { style: { color: '#6b7280', weight: 3, opacity: .9 } }).addTo(map);
     const rows = document.getElementById('point-rows'); let selectedRow;
